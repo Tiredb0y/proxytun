@@ -68,7 +68,7 @@ public sealed class RoutingEngine : IDisposable
                 throw new EngineException("Administrator rights are required to load the WinDivert network driver.");
             string dir = AppContext.BaseDirectory;
             if (!File.Exists(Path.Combine(dir, "WinDivert.dll")) || !File.Exists(Path.Combine(dir, "WinDivert64.sys")))
-                throw new EngineException("WinDivert.dll / WinDivert64.sys are missing next to the application. Re-run build.bat or reinstall.");
+                throw new EngineException("WinDivert.dll / WinDivert64.sys are missing next to the application. Reinstall the application with its required files.");
             if (!Environment.Is64BitProcess)
                 throw new EngineException("A 64-bit process is required (WinDivert64.sys).");
 

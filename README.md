@@ -54,18 +54,9 @@ A SOCKS5 client cannot capture traffic of arbitrary programs, so the app interce
 
 ## 2. Requirements
 
-Windows 10 / 11 x64. To build: .NET SDK 8 or newer. Running a published build needs nothing else. Administrator rights are requested **only when you press Start Routing** (the app otherwise runs as a normal user).
+Windows 10 / 11 x64. The published release runs without a separate .NET installation. Administrator rights are requested **only when you press Start Routing** (the app otherwise runs as a normal user).
 
-## 3. Build, test, publish
-
-```
-build.bat      REM verifies WinDivert SHA-256, builds Release, runs the automated tests
-publish.bat    REM standalone win-x64 build -> dist\AppProxyManager\ and dist\AppProxyManager-win-x64.zip
-```
-
-Tests only (works on any OS with .NET 8, no packages needed): `dotnet run --project tests/AppProxyManager.Tests`
-
-## 4. Use
+## 3. Use
 
 1. Start Hiddify (SOCKS5/mixed inbound on `127.0.0.1:12334`). In Hiddify's settings keep "set as system proxy" however you like – it is irrelevant to this app.
 2. Open **AppProxyManager.exe**, check host/port/type (credentials optional), press **Test connection** – it shows the proxy's exit IP.
@@ -76,7 +67,7 @@ Tests only (works on any OS with .NET 8, no packages needed): `dotnet run --proj
 Settings: launch at sign-in (scheduled task, highest privileges, no UAC prompt at logon), start minimized, auto-start routing, LAN bypass, IPv6 blocking, reset existing connections, system DNS option, DNS server.
 Passwords are stored encrypted with Windows DPAPI (current user only). Data: `%APPDATA%\AppProxyManager\config.json`, logs: `%LOCALAPPDATA%\AppProxyManager\logs\app.log`.
 
-## 5. Driver installation and removal
+## 4. Driver installation and removal
 
 * **Installation is automatic and on demand.** Pressing *Start Routing* opens WinDivert, which loads the bundled, upstream-signed `WinDivert64.sys` as a kernel service named `WinDivert`. Nothing is installed at setup time and nothing runs while routing is stopped.
 * On first start the app also adds one Windows Firewall inbound rule for its own exe ("App Proxy Manager (local redirector)"), needed because reflected packets arrive at the local redirector as inbound connections.
@@ -85,9 +76,9 @@ Passwords are stored encrypted with Windows DPAPI (current user only). Data: `%A
   * `scripts\driver-status.bat` – shows the service state.
   * `scripts\uninstall-driver.bat` – stops and deletes the `WinDivert` service immediately.
   * `scripts\uninstall.bat` – full cleanup: driver, firewall rule, sign-in task, optional settings/log deletion. Then delete the program folder.
-* Binaries: WinDivert 2.2.2-A x64 from the official release, SHA-256 pinned in `scripts\fetch-windivert.ps1` (`WinDivert.dll` `c1e060ee…d9a2`, `WinDivert64.sys` `8da08533…ddc2`). WinDivert is © basil00, LGPL-3.0 / GPL-2.0 (`third_party\WinDivert\LICENSE`), dynamically linked and unmodified.
+* Binaries: WinDivert 2.2.2-A x64 from the official release. WinDivert is © basil00, LGPL-3.0 / GPL-2.0 (`third_party\WinDivert\LICENSE`), dynamically linked and unmodified.
 
-## 6. Verify that it really works (public IP check)
+## 5. Verify that it really works (public IP check)
 
 ```
 powershell -File scripts\verify-routing.ps1 -Phase Baseline   (routing stopped)
@@ -96,7 +87,7 @@ powershell -File scripts\verify-routing.ps1 -Phase Verify
 ```
 `curl.exe` (not listed) must still print your real IP; the identical copy `curl-proxied.exe` (listed) must print the proxy's exit IP. Script prints PASS/FAIL.
 
-## 7. What has and has not been tested
+## 6. What has and has not been tested
 
 | Area | Status |
 |---|---|
@@ -114,7 +105,7 @@ powershell -File scripts\verify-routing.ps1 -Phase Verify
 
 If anything fails on first run, the log file and the Troubleshooting section below are the starting point; please send me the log and I'll fix it.
 
-## 8. Troubleshooting
+## 7. Troubleshooting
 
 | Symptom | Cause / fix |
 |---|---|
@@ -131,18 +122,18 @@ If anything fails on first run, the log file and the Troubleshooting section bel
 | Antivirus flags WinDivert | WinDivert is a packet-filter driver and is commonly flagged by heuristics; verify the SHA-256 hashes above. |
 | Start fails right after a Windows update | Reboot once; stale WinDivert driver versions are replaced on next load. |
 
-## 9. Security notes
+## 8. Security notes
 
 No traffic is stored or sent anywhere except to *your* configured proxy and (for *Test connection*) to `api.ipify.org` / `icanhazip.com` through it. Credentials are DPAPI-encrypted. The local redirector listens on all interfaces but accepts only connections that match a NAT entry created by the packet engine; anything else is closed immediately.
 
-## 10. Layout
+## 9. Layout
 
 ```
 src/AppProxyManager.Core    proxy clients, NAT, redirector, UDP relay, packet translator, config (portable, fully unit-tested)
 src/AppProxyManager.Engine  WinDivert P/Invoke, routing engine, DPAPI, firewall/task helpers (Windows only)
 src/AppProxyManager.UI      WPF dark UI
-tests/AppProxyManager.Tests dependency-free test runner (dotnet run)
-scripts/                    driver/uninstall helpers, WinDivert hash check, public-IP verification
+tests/AppProxyManager.Tests dependency-free automated test project
+scripts/                    driver/uninstall helpers, public-IP verification
 third_party/WinDivert       pinned WinDivert 2.2.2-A x64 binaries + license
 ```
 
@@ -204,37 +195,10 @@ redirector محلی و جدول NAT
 ## ۲. نیازمندی‌ها
 
 - Windows 10 یا Windows 11 نسخه‌ی x64
-- برای build کردن: .NET SDK نسخه‌ی ۸ یا جدیدتر
-- برای اجرای build منتشرشده: نیاز به نصب جداگانه‌ی .NET نیست
+- برای اجرای نسخه‌ی آماده‌ی انتشار، نصب جداگانه‌ی .NET لازم نیست
 - دسترسی Administrator فقط هنگام فشردن **Start Routing** درخواست می‌شود؛ اجرای عادی برنامه با کاربر معمولی انجام می‌شود.
 
-## ۳. ساخت، تست و انتشار
-
-در پوشه‌ی اصلی پروژه روی Windows اجرا کنید:
-
-```bat
-build.bat
-```
-
-این script وجود و hash فایل‌های WinDivert را بررسی می‌کند، build نسخه‌ی Release را انجام می‌دهد و تست‌های خودکار را اجرا می‌کند.
-
-برای ساخت نسخه‌ی قابل اجرا و self-contained:
-
-```bat
-publish.bat
-```
-
-خروجی در `dist\AppProxyManager\` و فایل فشرده در `dist\AppProxyManager-win-x64.zip` ساخته می‌شود.
-
-برای اجرای فقط تست‌ها:
-
-```bat
-dotnet run --project tests/AppProxyManager.Tests
-```
-
-تست‌ها به package خارجی نیاز ندارند و با .NET 8 روی سیستم‌های دیگر هم قابل اجرا هستند.
-
-## ۴. روش استفاده
+## ۳. روش استفاده
 
 1. Hiddify یا هر پراکسی سازگار را اجرا کنید. برای Hiddify، ورودی SOCKS5 یا mixed معمولاً روی `127.0.0.1:12334` قرار دارد. فعال یا غیرفعال بودن System Proxy در Hiddify برای ProxyTun اهمیتی ندارد.
 2. فایل `AppProxyManager.exe` را اجرا کنید و host، port و type پراکسی را بررسی کنید. با **Test connection** می‌توانید IP خروجی پراکسی را ببینید.
@@ -251,7 +215,7 @@ dotnet run --project tests/AppProxyManager.Tests
 - تنظیمات: `%APPDATA%\AppProxyManager\config.json`
 - logها: `%LOCALAPPDATA%\AppProxyManager\logs\app.log`
 
-## ۵. نصب و حذف درایور
+## ۴. نصب و حذف درایور
 
 نصب درایور به‌صورت خودکار و فقط هنگام نیاز انجام می‌شود. با فشردن **Start Routing**، برنامه درایور signed و همراه `WinDivert64.sys` را با نام سرویس `WinDivert` load می‌کند. هنگام توقف routing، handleهای درایور بسته و سرویس unload می‌شود.
 
@@ -263,9 +227,9 @@ dotnet run --project tests/AppProxyManager.Tests
 - `scripts\uninstall-driver.bat`: توقف و حذف فوری سرویس `WinDivert`
 - `scripts\uninstall.bat`: پاک‌سازی کامل درایور، firewall rule، scheduled task و در صورت انتخاب تنظیمات و logها
 
-WinDivert نسخه‌ی 2.2.2-A x64 از release رسمی است و hash آن در `scripts\fetch-windivert.ps1` ثابت شده است. فایل‌های WinDivert بدون تغییر و به‌صورت dynamic linked استفاده می‌شوند. مجوز آن LGPL-3.0 / GPL-2.0 است و license در `third_party\WinDivert\LICENSE` قرار دارد.
+WinDivert نسخه‌ی 2.2.2-A x64 از release رسمی است. فایل‌های WinDivert بدون تغییر و به‌صورت dynamic linked استفاده می‌شوند. مجوز آن LGPL-3.0 / GPL-2.0 است و license در `third_party\WinDivert\LICENSE` قرار دارد.
 
-## ۶. بررسی واقعی routing
+## ۵. بررسی واقعی routing
 
 برای بررسی IP عمومی، ابتدا baseline را با routing خاموش اجرا کنید:
 
@@ -281,7 +245,7 @@ powershell -File scripts/verify-routing.ps1 -Phase Verify
 
 `curl.exe` که در فهرست نیست باید IP واقعی شما را نشان دهد و `curl-proxied.exe` که در فهرست است باید IP خروجی پراکسی را نشان دهد. script نتیجه‌ی PASS یا FAIL چاپ می‌کند.
 
-## ۷. وضعیت تست‌ها
+## ۶. وضعیت تست‌ها
 
 - Config store، ذخیره‌سازی، recovery فایل خراب و تشخیص موارد تکراری: تست خودکار موفق
 - کلاینت SOCKS5 بدون رمز و با username/password و کلاینت HTTP CONNECT: تست خودکار موفق
@@ -297,7 +261,7 @@ powershell -File scripts/verify-routing.ps1 -Phase Verify
 
 اگر در اجرای اول خطایی دیدید، فایل log و بخش Troubleshooting را بررسی کنید.
 
-## ۸. رفع خطاهای رایج
+## ۷. رفع خطاهای رایج
 
 | خطا یا وضعیت | راه‌حل |
 |---|---|
@@ -314,20 +278,20 @@ powershell -File scripts/verify-routing.ps1 -Phase Verify
 | آنتی‌ویروس WinDivert را flag می‌کند | WinDivert یک packet-filter driver است و ممکن است با heuristic شناسایی شود؛ hashهای فایل را بررسی کنید. |
 | بعد از Windows Update اجرا متوقف شده | یک بار reboot کنید؛ درایور قدیمی ممکن است در load بعدی جایگزین شود. |
 
-## ۹. نکات امنیتی
+## ۸. نکات امنیتی
 
 هیچ ترافیکی در برنامه ذخیره نمی‌شود و ترافیک فقط به پراکسی تنظیم‌شده‌ی شما و برای **Test connection** به `api.ipify.org` یا `icanhazip.com` از مسیر همان پراکسی ارسال می‌شود. رمزهای عبور با DPAPI رمزگذاری می‌شوند.
 
 redirector محلی روی interfaceهای سیستم گوش می‌دهد، اما فقط اتصال‌هایی را قبول می‌کند که در جدول NAT توسط packet engine ثبت شده باشند؛ اتصال‌های دیگر بلافاصله بسته می‌شوند.
 
-## ۱۰. ساختار پروژه
+## ۹. ساختار پروژه
 
 ```text
 src/AppProxyManager.Core    کلاینت‌های proxy، NAT، redirector، UDP relay، packet translator و config
 src/AppProxyManager.Engine  P/Invoke مربوط به WinDivert، routing engine، DPAPI، firewall و taskهای Windows
 src/AppProxyManager.UI      رابط کاربری WPF
-tests/AppProxyManager.Tests dependency-free test runner (dotnet run)
-scripts/                    ابزارهای driver، uninstall، بررسی hash و بررسی IP عمومی
+tests/AppProxyManager.Tests تست‌های خودکار مستقل و بدون dependency خارجی
+scripts/                    ابزارهای مدیریت و حذف driver و بررسی IP عمومی
 third_party/WinDivert       فایل‌های WinDivert 2.2.2-A x64 و license
 ```
 
