@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Dependency-free test runner. Run: dotnet run (project tests/AppProxyManager.Tests). Works offline; non-zero exit code on failure. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AppProxyManager.Core\AppProxyManager.Core.csproj" />
+  </ItemGroup>
+</Project>

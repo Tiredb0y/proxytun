@@ -1,0 +1,32 @@
+<Window x:Class="AppProxyManager.UI.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Icon="app.ico" Title="Settings" Width="560" SizeToContent="Height" ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
+        Background="{StaticResource Bg}" Foreground="{StaticResource Text}" FontFamily="Segoe UI">
+  <StackPanel Margin="20">
+    <TextBlock Text="Startup" FontWeight="SemiBold" Margin="0,0,0,4"/>
+    <CheckBox x:Name="ChkLogon" Content="Launch at Windows sign-in (scheduled task with administrator rights)"/>
+    <CheckBox x:Name="ChkMinimized" Content="Start minimized when launched at sign-in"/>
+    <CheckBox x:Name="ChkAutoStart" Content="Start routing automatically at sign-in"/>
+
+    <TextBlock Text="Routing" FontWeight="SemiBold" Margin="0,16,0,4"/>
+    <CheckBox x:Name="ChkLan" Content="Keep LAN / local-network traffic of routed apps direct"/>
+    <CheckBox x:Name="ChkV6" Content="Block IPv6 for routed apps (prevents IPv6 leaks; apps fall back to IPv4)"/>
+    <CheckBox x:Name="ChkReset" Content="Reset already-open connections of routed apps when routing starts"/>
+    <CheckBox x:Name="ChkSysDns">
+      <TextBlock TextWrapping="Wrap" Text="Send ALL system DNS lookups (Windows DNS Client) through the proxy. Prevents DNS leaks of apps that use the Windows resolver, but changes how every app resolves names."/>
+    </CheckBox>
+
+    <TextBlock Text="DNS server used through the proxy" Foreground="{StaticResource Muted}" Margin="0,14,0,4"/>
+    <TextBox x:Name="TxtDns" Width="200" HorizontalAlignment="Left"/>
+
+    <StackPanel Orientation="Horizontal" Margin="0,22,0,0">
+      <Button Content="Open log folder" Click="BtnLogs_Click" Margin="0,0,8,0"/>
+      <Button Content="Open data folder" Click="BtnData_Click"/>
+    </StackPanel>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+      <Button Content="Cancel" Click="BtnCancel_Click" Margin="0,0,8,0"/>
+      <Button Content="Save" Style="{StaticResource PrimaryButton}" Click="BtnSave_Click"/>
+    </StackPanel>
+  </StackPanel>
+</Window>
