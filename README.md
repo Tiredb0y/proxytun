@@ -4,25 +4,6 @@ Route **selected Windows applications** through a local SOCKS5 / HTTP proxy (def
 while every other application keeps its normal direct connection. No system proxy is touched, no per-app proxy settings are needed,
 no certificates are installed, no HTTPS is intercepted.
 
-## معرفی فارسی
-
-**ProxyTun** یک برنامه‌ی ویندوزی برای عبور دادن ترافیک برنامه‌های انتخاب‌شده از یک پراکسی محلی است. برنامه از پراکسی‌های
-`SOCKS5` و `HTTP CONNECT` پشتیبانی می‌کند و ترافیک برنامه‌هایی که انتخاب نشده‌اند مستقیماً به اینترنت می‌رود.
-
-ویژگی‌های اصلی:
-
-- انتخاب برنامه‌ها بر اساس مسیر کامل فایل اجرایی (`.exe`)
-- پشتیبانی از TCP، UDP و DNS برای برنامه‌های انتخاب‌شده
-- جلوگیری از نشت ترافیک در صورت قطع شدن پراکسی
-- مسدودسازی IPv6 برای ترافیک پروکسی‌شده، برای جلوگیری از نشت ناخواسته
-- ذخیره‌ی امن رمز عبور با Windows DPAPI
-- اجرای برنامه بدون نیاز به نصب .NET در نسخه‌ی آماده‌ی انتشار
-- بستن پنجره، برنامه را به system tray می‌فرستد و routing را ادامه می‌دهد؛ خروج کامل از منوی راست‌کلیک آیکن tray انجام می‌شود
-
-برای دانلود نسخه‌ی آماده‌ی ویندوز، به [آخرین Release](https://github.com/Tiredb0y/proxytun/releases/latest) بروید. این پروژه به سرویس یا شرکت پراکسی خاصی وابسته نیست؛ کافی است آدرس، پورت و نوع پراکسی خود را در Settings وارد کنید.
-
-> **وضعیت تست:** بخش‌های اصلی شبکه و routing با تست‌های خودکار بررسی شده‌اند. اجرای واقعی WinDivert و رابط WPF باید روی Windows بررسی شود؛ جزئیات در بخش [What has and has not been tested](#what-has-and-has-not-been-tested) آمده است.
-
 > **Verification status — please read.** The development environment for this project was Linux with no Windows machine.
 > See [What has and has not been tested](#what-has-and-has-not-been-tested). In short: the proxy client, redirector, UDP relay,
 > packet rewriting and all routing decisions are covered by 30 automated tests that pass; the WinDivert driver integration and the
@@ -90,7 +71,7 @@ Tests only (works on any OS with .NET 8, no packages needed): `dotnet run --proj
 2. Open **AppProxyManager.exe**, check host/port/type (credentials optional), press **Test connection** – it shows the proxy's exit IP.
 3. **Add Application** (or drag `.exe` files onto the window). Duplicates are rejected. Everything is saved automatically.
 4. **Start Routing** → accept the UAC prompt (the app restarts elevated and starts routing). Status per app is shown in the list.
-5. **Stop Routing** returns everything to direct instantly. Closing the app also stops routing.
+5. **Stop Routing** returns everything to direct instantly. Closing the window hides the app in the system tray and routing continues; choose **Exit** from the tray icon's right-click menu to quit completely (routing then stops).
 
 Settings: launch at sign-in (scheduled task, highest privileges, no UAC prompt at logon), start minimized, auto-start routing, LAN bypass, IPv6 blocking, reset existing connections, system DNS option, DNS server.
 Passwords are stored encrypted with Windows DPAPI (current user only). Data: `%APPDATA%\AppProxyManager\config.json`, logs: `%LOCALAPPDATA%\AppProxyManager\logs\app.log`.
@@ -164,3 +145,189 @@ tests/AppProxyManager.Tests dependency-free test runner (dotnet run)
 scripts/                    driver/uninstall helpers, WinDivert hash check, public-IP verification
 third_party/WinDivert       pinned WinDivert 2.2.2-A x64 binaries + license
 ```
+
+---
+
+# توضیحات فارسی
+
+## معرفی
+
+**ProxyTun** یا **App Proxy Manager** یک برنامه‌ی Windows برای هدایت ترافیک تعدادی از برنامه‌های انتخاب‌شده از یک پراکسی محلی است. برنامه از پراکسی‌های `SOCKS5` و `HTTP CONNECT` پشتیبانی می‌کند. برنامه‌هایی که در فهرست قرار نگرفته‌اند، بدون تغییر و به‌صورت مستقیم به اینترنت متصل می‌شوند.
+
+ProxyTun از Windows System Proxy استفاده نمی‌کند، به تنظیم جداگانه داخل هر برنامه نیاز ندارد، گواهی نصب نمی‌کند و ترافیک HTTPS را رمزگشایی یا مشاهده نمی‌کند. این پروژه به سرویس خاصی مثل Hiddify یا Proxyfyre وابسته نیست؛ هر پراکسی سازگار را می‌توان با وارد کردن host، port و type در تنظیمات استفاده کرد.
+
+برای دانلود نسخه‌ی آماده‌ی Windows x64 به [آخرین Release](https://github.com/Tiredb0y/proxytun/releases/latest) بروید. فایل Release به‌صورت self-contained منتشر شده و برای اجرا به نصب جداگانه‌ی .NET نیاز ندارد.
+
+> **وضعیت تست:** تست‌های خودکار بخش‌های اصلی شبکه، کلاینت پراکسی، NAT، redirector، UDP relay، بازنویسی packet و تصمیم‌های routing را پوشش می‌دهند. با این حال، اجرای واقعی WinDivert، رابط WPF و بررسی تغییر IP عمومی باید روی یک سیستم Windows انجام شود.
+
+## ۱. معماری برنامه
+
+یک کلاینت SOCKS5 به‌تنهایی نمی‌تواند ترافیک همه‌ی برنامه‌ها را بگیرد. ProxyTun با استفاده از WinDivert ترافیک را در سطح packet بررسی می‌کند و با تشخیص process، فقط packetهای برنامه‌های انتخاب‌شده را به redirector محلی می‌فرستد.
+
+روند کلی برای TCP به این شکل است:
+
+```text
+برنامه‌ی انتخاب‌شده
+        │
+        ▼
+WinDivert و تشخیص process/socket
+        │
+        ▼
+redirector محلی و جدول NAT
+        │
+        ▼
+اتصال SOCKS5 CONNECT یا HTTP CONNECT به پراکسی
+        │
+        ▼
+سرور مقصد از مسیر پراکسی
+```
+
+- **TCP:** اتصال جدید برنامه‌ی انتخاب‌شده به redirector محلی منتقل می‌شود و redirector آن را از طریق پراکسی باز می‌کند.
+- **UDP:** در صورت استفاده از SOCKS5، relay محلی از `UDP ASSOCIATE` استفاده می‌کند. پراکسی‌های HTTP معمولاً UDP را پشتیبانی نمی‌کنند؛ در این حالت UDP غیر DNS برای جلوگیری از نشت حذف می‌شود.
+- **DNS:** درخواست UDP روی پورت ۵۳ برنامه‌های انتخاب‌شده به DNS-over-TCP از مسیر پراکسی تبدیل می‌شود. سرور پیش‌فرض `1.1.1.1` است و قابل تغییر است.
+- **IPv6:** به‌صورت پیش‌فرض TCP و UDP روی IPv6 برای برنامه‌های route‌شده حذف می‌شود تا برنامه به IPv4 برگردد و نشت IPv6 اتفاق نیفتد.
+- **جلوگیری از loop:** اتصال خود برنامه به پراکسی route نمی‌شود. loopback دست‌نخورده می‌ماند و خود ProxyTun و برنامه‌ای که پراکسی را ارائه می‌دهد از routing خارج هستند.
+- **Fail closed:** اگر پراکسی قطع باشد، برنامه‌ی انتخاب‌شده اتصال مستقیم پیدا نمی‌کند و ارتباطش مسدود می‌شود. بعد از برگشت پراکسی، recovery به‌صورت خودکار انجام می‌شود.
+- **ترافیک سایر برنامه‌ها:** packetهای برنامه‌های انتخاب‌نشده بدون تغییر دوباره inject می‌شوند.
+- **تشخیص برنامه:** معیار، مسیر کامل فایل اجرایی است؛ بنابراین همه‌ی instanceهای همان exe و اجراهای بعدی پوشش داده می‌شوند.
+
+### محدودیت‌های مهم
+
+1. اتصال‌هایی که قبل از شروع routing باز بوده‌اند، تا زمان reconnect ممکن است مستقیم باقی بمانند. گزینه‌ی **Reset already-open connections** برای بستن آن‌ها وجود دارد.
+2. processهای فرزند بر اساس exe خودشان بررسی می‌شوند. اگر یک launcher یا updater برنامه‌ی دیگری را برای شبکه اجرا کند، آن exe هم باید جداگانه اضافه شود.
+3. بیشتر برنامه‌ها DNS را از طریق Windows DNS Client انجام می‌دهند، نه مستقیماً از process خودشان. در نتیجه ممکن است خود lookup به DNS سرویس‌دهنده‌ی اینترنت برسد، هرچند ترافیک بعدی برنامه از پراکسی عبور کند. گزینه‌ی **Send all system DNS lookups through the proxy** برای این حالت وجود دارد و روی DNS همه‌ی برنامه‌ها اثر می‌گذارد.
+4. تمام TCP و UDP خروجی از یک حلقه‌ی user-mode عبور می‌کند و روی لینک‌های بسیار سریع کمی مصرف CPU اضافه ایجاد می‌شود.
+5. relay مربوط به UDP برای یک socket و یک IP مقصد، mapping پورت را نگه می‌دارد؛ استفاده‌ی هم‌زمان از چند پورت روی یک IP ممکن است mapping پاسخ‌ها را تغییر دهد.
+6. ترافیک proxied فقط IPv4 است. fragmentها و ICMP بدون تغییر عبور می‌کنند.
+7. برای اجرای WinDivert، درایور signed لازم است. Secure Boot معمولاً مشکلی ایجاد نمی‌کند، اما Smart App Control، Memory Integrity/HVCI یا vulnerable-driver blocklist ممکن است درایور را مسدود کنند.
+
+## ۲. نیازمندی‌ها
+
+- Windows 10 یا Windows 11 نسخه‌ی x64
+- برای build کردن: .NET SDK نسخه‌ی ۸ یا جدیدتر
+- برای اجرای build منتشرشده: نیاز به نصب جداگانه‌ی .NET نیست
+- دسترسی Administrator فقط هنگام فشردن **Start Routing** درخواست می‌شود؛ اجرای عادی برنامه با کاربر معمولی انجام می‌شود.
+
+## ۳. ساخت، تست و انتشار
+
+در پوشه‌ی اصلی پروژه روی Windows اجرا کنید:
+
+```bat
+build.bat
+```
+
+این script وجود و hash فایل‌های WinDivert را بررسی می‌کند، build نسخه‌ی Release را انجام می‌دهد و تست‌های خودکار را اجرا می‌کند.
+
+برای ساخت نسخه‌ی قابل اجرا و self-contained:
+
+```bat
+publish.bat
+```
+
+خروجی در `dist\AppProxyManager\` و فایل فشرده در `dist\AppProxyManager-win-x64.zip` ساخته می‌شود.
+
+برای اجرای فقط تست‌ها:
+
+```bat
+dotnet run --project tests/AppProxyManager.Tests
+```
+
+تست‌ها به package خارجی نیاز ندارند و با .NET 8 روی سیستم‌های دیگر هم قابل اجرا هستند.
+
+## ۴. روش استفاده
+
+1. Hiddify یا هر پراکسی سازگار را اجرا کنید. برای Hiddify، ورودی SOCKS5 یا mixed معمولاً روی `127.0.0.1:12334` قرار دارد. فعال یا غیرفعال بودن System Proxy در Hiddify برای ProxyTun اهمیتی ندارد.
+2. فایل `AppProxyManager.exe` را اجرا کنید و host، port و type پراکسی را بررسی کنید. با **Test connection** می‌توانید IP خروجی پراکسی را ببینید.
+3. با **Add Application** یک exe اضافه کنید یا فایل‌های exe را روی پنجره بکشید. موارد تکراری پذیرفته نمی‌شوند و تنظیمات به‌صورت خودکار ذخیره می‌شوند.
+4. روی **Start Routing** بزنید و درخواست UAC را تأیید کنید. برنامه با دسترسی elevated دوباره اجرا می‌شود و وضعیت هر برنامه را نشان می‌دهد.
+5. **Stop Routing** تمام ترافیک را به حالت مستقیم برمی‌گرداند.
+
+بستن پنجره‌ی اصلی برنامه را terminate نمی‌کند؛ برنامه در system tray می‌ماند و routing ادامه پیدا می‌کند. برای خروج کامل، روی آیکن tray راست‌کلیک کرده و **Exit** را انتخاب کنید. خروج کامل یا Stop Routing باعث توقف routing می‌شود.
+
+تنظیمات دیگر شامل اجرای خودکار هنگام ورود به Windows، اجرای minimized، شروع خودکار routing، bypass شبکه‌ی LAN، مسدودسازی IPv6، reset اتصال‌های قبلی، انتقال DNS سیستم از proxy و انتخاب DNS server است. رمزهای عبور با Windows DPAPI برای کاربر فعلی رمزگذاری می‌شوند.
+
+مسیر داده‌ها:
+
+- تنظیمات: `%APPDATA%\AppProxyManager\config.json`
+- logها: `%LOCALAPPDATA%\AppProxyManager\logs\app.log`
+
+## ۵. نصب و حذف درایور
+
+نصب درایور به‌صورت خودکار و فقط هنگام نیاز انجام می‌شود. با فشردن **Start Routing**، برنامه درایور signed و همراه `WinDivert64.sys` را با نام سرویس `WinDivert` load می‌کند. هنگام توقف routing، handleهای درایور بسته و سرویس unload می‌شود.
+
+در اولین اجرا، برنامه یک قانون inbound در Windows Firewall برای exe خودش ایجاد می‌کند تا packetهای reflected به redirector محلی برسند.
+
+ابزارهای مدیریت درایور:
+
+- `scripts\driver-status.bat`: نمایش وضعیت سرویس
+- `scripts\uninstall-driver.bat`: توقف و حذف فوری سرویس `WinDivert`
+- `scripts\uninstall.bat`: پاک‌سازی کامل درایور، firewall rule، scheduled task و در صورت انتخاب تنظیمات و logها
+
+WinDivert نسخه‌ی 2.2.2-A x64 از release رسمی است و hash آن در `scripts\fetch-windivert.ps1` ثابت شده است. فایل‌های WinDivert بدون تغییر و به‌صورت dynamic linked استفاده می‌شوند. مجوز آن LGPL-3.0 / GPL-2.0 است و license در `third_party\WinDivert\LICENSE` قرار دارد.
+
+## ۶. بررسی واقعی routing
+
+برای بررسی IP عمومی، ابتدا baseline را با routing خاموش اجرا کنید:
+
+```powershell
+powershell -File scripts/verify-routing.ps1 -Phase Baseline
+```
+
+سپس یک کپی از `curl.exe` را در `%TEMP%\apm-verify\curl-proxied.exe` قرار دهید، آن را در برنامه اضافه کنید و routing را شروع کنید. بعد اجرا کنید:
+
+```powershell
+powershell -File scripts/verify-routing.ps1 -Phase Verify
+```
+
+`curl.exe` که در فهرست نیست باید IP واقعی شما را نشان دهد و `curl-proxied.exe` که در فهرست است باید IP خروجی پراکسی را نشان دهد. script نتیجه‌ی PASS یا FAIL چاپ می‌کند.
+
+## ۷. وضعیت تست‌ها
+
+- Config store، ذخیره‌سازی، recovery فایل خراب و تشخیص موارد تکراری: تست خودکار موفق
+- کلاینت SOCKS5 بدون رمز و با username/password و کلاینت HTTP CONNECT: تست خودکار موفق
+- منطق Test connection، parsing خروجی IP، proxy خراب، type اشتباه و timeout: تست خودکار موفق
+- parsing و بازنویسی packetهای IPv4 و checksumهای TCP/UDP/IP: تست خودکار موفق
+- تصمیم‌های routing برای برنامه‌های listed و unlisted، loopback، LAN bypass، loop guard، IPv6، UDP و DNS: تست خودکار موفق
+- TCP redirector و round-trip داده‌ی ۳۰۰ کیلوبایتی و fail-closed هنگام قطع پراکسی: تست خودکار موفق
+- UDP relay با SOCKS5 UDP ASSOCIATE و DNS-over-TCP: تست خودکار موفق؛ این تست مسیر واقعی packet از درایور را بررسی نمی‌کند
+- integration واقعی WinDivert شامل P/Invoke، mapping process و reinjection: روی Windows اجرا نشده است
+- رابط WPF، DPAPI wrapper، scheduled task، firewall و restart با elevation: روی Windows اجرا نشده است
+- تغییر IP عمومی برای برنامه‌ی proxied و ثابت ماندن IP برنامه‌ی مستقیم: باید با script بالا بررسی شود
+- UDP از مسیر واقعی driver: تا زمان تست با یک سایت QUIC یا UDP echo نباید قطعی فرض شود؛ مسیرهای اصلی TCP و DNS هستند
+
+اگر در اجرای اول خطایی دیدید، فایل log و بخش Troubleshooting را بررسی کنید.
+
+## ۸. رفع خطاهای رایج
+
+| خطا یا وضعیت | راه‌حل |
+|---|---|
+| خطای WinDivert با کد 1275 یا 577 | Smart App Control یا Memory Integrity/HVCI را بررسی کنید و Windows را به‌روز کنید. سیاست سازمانی WDAC هم ممکن است driver را مسدود کند. |
+| خطای Access denied (5) | روی **Start Routing** بزنید و UAC را تأیید کنید یا برنامه را با Administrator اجرا کنید. |
+| Base Filtering Engine با کد 1753 اجرا نیست | سرویس Base Filtering Engine را در `services.msc` اجرا کنید. |
+| خطای 1058، 1060 یا 1393 | سرویس قدیمی است؛ `scripts\uninstall-driver.bat` را اجرا و دوباره امتحان کنید. |
+| وضعیت Blocked: proxy unreachable | پراکسی اجرا نیست یا host، port یا type اشتباه است. با **Test connection** بررسی کنید. این مسدودسازی برای جلوگیری از leak عمدی است. |
+| پیام Is this an HTTP proxy? | نوع ورودی HTTP است؛ type را روی HTTP بگذارید. HTTP معمولاً UDP را پشتیبانی نمی‌کند. |
+| برنامه روی waiting for traffic می‌ماند | هنوز اتصال جدیدی باز نکرده یا از helper exe دیگری استفاده می‌کند. برنامه را restart کنید، reset اتصال‌های قبلی را فعال کنید یا exe فرزند را اضافه کنید. |
+| region سایت با IP هماهنگ نیست | DNS ممکن است از Windows resolver عبور کند؛ گزینه‌ی system DNS را فعال کنید. |
+| مرورگر با QUIC کند یا ناپایدار است | QUIC به SOCKS5 با UDP ASSOCIATE نیاز دارد؛ در غیر این صورت مرورگر بعد از مدتی به TCP برمی‌گردد. |
+| هیچ ترافیکی proxied نمی‌شود | log را بررسی کنید و مطمئن شوید مسیر واقعی process را اضافه کرده‌اید، نه launcher را. script بررسی routing برای جدا کردن علت استفاده می‌شود. |
+| آنتی‌ویروس WinDivert را flag می‌کند | WinDivert یک packet-filter driver است و ممکن است با heuristic شناسایی شود؛ hashهای فایل را بررسی کنید. |
+| بعد از Windows Update اجرا متوقف شده | یک بار reboot کنید؛ درایور قدیمی ممکن است در load بعدی جایگزین شود. |
+
+## ۹. نکات امنیتی
+
+هیچ ترافیکی در برنامه ذخیره نمی‌شود و ترافیک فقط به پراکسی تنظیم‌شده‌ی شما و برای **Test connection** به `api.ipify.org` یا `icanhazip.com` از مسیر همان پراکسی ارسال می‌شود. رمزهای عبور با DPAPI رمزگذاری می‌شوند.
+
+redirector محلی روی interfaceهای سیستم گوش می‌دهد، اما فقط اتصال‌هایی را قبول می‌کند که در جدول NAT توسط packet engine ثبت شده باشند؛ اتصال‌های دیگر بلافاصله بسته می‌شوند.
+
+## ۱۰. ساختار پروژه
+
+```text
+src/AppProxyManager.Core    کلاینت‌های proxy، NAT، redirector، UDP relay، packet translator و config
+src/AppProxyManager.Engine  P/Invoke مربوط به WinDivert، routing engine، DPAPI، firewall و taskهای Windows
+src/AppProxyManager.UI      رابط کاربری WPF
+tests/AppProxyManager.Tests dependency-free test runner (dotnet run)
+scripts/                    ابزارهای driver، uninstall، بررسی hash و بررسی IP عمومی
+third_party/WinDivert       فایل‌های WinDivert 2.2.2-A x64 و license
+```
+
