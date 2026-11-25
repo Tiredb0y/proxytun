@@ -1,8 +1,27 @@
-# App Proxy Manager for Windows
+# ProxyTun (App Proxy Manager) for Windows
 
 Route **selected Windows applications** through a local SOCKS5 / HTTP proxy (default: Hiddify at `127.0.0.1:12334`, SOCKS5)
 while every other application keeps its normal direct connection. No system proxy is touched, no per-app proxy settings are needed,
 no certificates are installed, no HTTPS is intercepted.
+
+## معرفی فارسی
+
+**ProxyTun** یک برنامه‌ی ویندوزی برای عبور دادن ترافیک برنامه‌های انتخاب‌شده از یک پراکسی محلی است. برنامه از پراکسی‌های
+`SOCKS5` و `HTTP CONNECT` پشتیبانی می‌کند و ترافیک برنامه‌هایی که انتخاب نشده‌اند مستقیماً به اینترنت می‌رود.
+
+ویژگی‌های اصلی:
+
+- انتخاب برنامه‌ها بر اساس مسیر کامل فایل اجرایی (`.exe`)
+- پشتیبانی از TCP، UDP و DNS برای برنامه‌های انتخاب‌شده
+- جلوگیری از نشت ترافیک در صورت قطع شدن پراکسی
+- مسدودسازی IPv6 برای ترافیک پروکسی‌شده، برای جلوگیری از نشت ناخواسته
+- ذخیره‌ی امن رمز عبور با Windows DPAPI
+- اجرای برنامه بدون نیاز به نصب .NET در نسخه‌ی آماده‌ی انتشار
+- بستن پنجره، برنامه را به system tray می‌فرستد و routing را ادامه می‌دهد؛ خروج کامل از منوی راست‌کلیک آیکن tray انجام می‌شود
+
+برای دانلود نسخه‌ی آماده‌ی ویندوز، به [آخرین Release](https://github.com/Tiredb0y/proxytun/releases/latest) بروید. این پروژه به سرویس یا شرکت پراکسی خاصی وابسته نیست؛ کافی است آدرس، پورت و نوع پراکسی خود را در Settings وارد کنید.
+
+> **وضعیت تست:** بخش‌های اصلی شبکه و routing با تست‌های خودکار بررسی شده‌اند. اجرای واقعی WinDivert و رابط WPF باید روی Windows بررسی شود؛ جزئیات در بخش [What has and has not been tested](#what-has-and-has-not-been-tested) آمده است.
 
 > **Verification status — please read.** The development environment for this project was Linux with no Windows machine.
 > See [What has and has not been tested](#what-has-and-has-not-been-tested). In short: the proxy client, redirector, UDP relay,
